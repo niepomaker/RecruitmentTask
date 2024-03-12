@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 prefix = "https://api.nbp.pl/api"
+FIRSTELEMENT = 0;
 
 def fetch_exchange_rates(currency_code, days):
     end_date = datetime.now()
@@ -67,6 +68,8 @@ def saveAllColumns(data1, data2):
 
     data1.to_csv('all_currency_data.csv')
 
+    print(f"Data for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD, {noUsedColumns} has been saved!")
+
 
 def dataSelection():
     # Allow the user to input the name of the currency pairs they wish to access information for
@@ -75,7 +78,7 @@ def dataSelection():
     # Fetch the exchange rates for the last 60 days
     exchange_rates_data = userPairsCurrency(currency_pairs, 60)
 
-    # Convert the data to a pandas DataFramew
+    # Convert the data to a pandas DataFrame
     df = pd.DataFrame.from_dict(exchange_rates_data)
 
     return (df, currency_pairs)
@@ -88,24 +91,25 @@ def onlyUserSelectedCurrency():
 
 
 if __name__ == "__main__":
+
     print('Choose what you want to do:\n' +
           '1. Retrieve exchange rates for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD for the last 60 days\n' +
           '2. Select the currencies you want to see\n' +
-          '3. Save all the previously mentioned data into a CSV file \n' +
+          '3. Save all the data from point 1. and 2. into a CSV file \n' +
           '4. Select the currencies you want to see and save them into a CSV file\n'+
-          '9. Exit')
+          '9. Exit\n')
 
-    user_input = input()
+    user_input = input("Your choice: ")
     while (user_input != 9):
         match user_input:
             case "1":
                 print(fetchingCurrencyData())
                 break
             case "2":
-                print(dataSelection())
+                print(dataSelection()[FIRSTELEMENT])
                 break
             case "3":
-                saveAllColumns(fetchingCurrencyData(), dataSelection()[0])
+                saveAllColumns(fetchingCurrencyData(), dataSelection()[FIRSTELEMENT])
                 break
             case "4":
                 onlyUserSelectedCurrency()
