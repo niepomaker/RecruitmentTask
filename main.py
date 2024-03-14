@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 prefix = "https://api.nbp.pl/api"
-FIRSTELEMENT = 0;
+FIRSTELEMENT = 0
 
 def fetch_exchange_rates(currency_code, days):
     end_date = datetime.now()
@@ -68,7 +68,9 @@ def saveAllColumns(data1, data2):
 
     data1.to_csv('all_currency_data.csv')
 
-    print(f"Data for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD, {noUsedColumns} has been saved!")
+    # Używając list comprehension do konwersji wszystkich elementów na stringi
+    print("Data for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD, " + ", ".join([zmienna for zmienna in noUsedColumns]) + " has bean saved!")
+
 
 
 def dataSelection():
@@ -87,8 +89,7 @@ def dataSelection():
 def onlyUserSelectedCurrency():
     data , currency = dataSelection()
     data.to_csv('selected_currency_data.csv')
-    print(f"Data for {currency} has been saved!")
-
+    print("Data for  " + ", ".join([zmienna for zmienna in currency]) + " has bean saved!")
 
 if __name__ == "__main__":
 
