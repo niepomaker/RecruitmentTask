@@ -1,9 +1,12 @@
+from statistics import mean, median
+
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
 prefix = "https://api.nbp.pl/api"
 FIRSTELEMENT = 0
+TABLES = ['a', 'b', 'c']
 
 
 def getUrl(table="A"):
@@ -11,9 +14,8 @@ def getUrl(table="A"):
 
 
 def getAllCurrency():
-    data = ['a', 'b', 'c']
     table = []
-    for el in data:
+    for el in TABLES:
         response = requests.get(getUrl(el))
         json = response.json()
         counter = 0
@@ -32,7 +34,7 @@ def checkTheCurrency(input):
 def fetch_exchange_rates(currency_code, days):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
-    url = f"{prefix}/exchangerates/rates/B/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
+    url = f"{prefix}/exchangerates/rates/A/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
     response = requests.get(url)
     data = response.json()
     rates = {rate['effectiveDate']: rate['mid'] for rate in data['rates']}
@@ -98,8 +100,7 @@ def saveAllColumns(data1, data2):
         [zmienna for zmienna in noUsedColumns]) + " has bean saved!")
 
 
-def dataSelection():
-    # Allow the user to input the name of the currency pairs they wish to access information for
+def takeTheInput():
     while (True):
         user_input = input("Enter the currency separated by space (e.g. EUR USD CHF): ")
         length = len(user_input.split())
@@ -114,7 +115,12 @@ def dataSelection():
             break
         else:
             continue
-    currency_pairs = user_input.upper().split()
+    return user_input
+
+
+def dataSelection():
+    # Allow the user to input the name of the currency pairs they wish to access information for
+    currency_pairs = takeTheInput()
     # Fetch the exchange rates for the last 60 days
     exchange_rates_data = userPairsCurrency(currency_pairs, 60)
 
@@ -130,6 +136,64 @@ def onlyUserSelectedCurrency():
     print("Data for  " + "/PLN, ".join([zmienna for zmienna in currency]) + "/PLN has bean saved!")
 
 
+def checkWhereIsCurrencyAvailable(rate):
+    for table in TABLES:
+        codes = []
+        url = f"{prefix}/exchangerates/tables/{table.upper()}/"
+        response = requests.get(url)
+        data = response.json()
+        counter = 0
+        for _ in data[0]['rates']:
+            code = data[0]['rates'][counter]['code']
+            if code not in table:
+                if code not in codes:
+                    codes.append(code)
+            counter = counter + 1
+        if rate in codes:
+            return table.upper()
+
+
+def takeRatesValues(code):
+    values = []
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=60)
+    url = f"{prefix}/exchangerates/rates/{checkWhereIsCurrencyAvailable(code)}/{code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
+    response = requests.get(url)
+    data = response.json()
+    for mid in data['rates']:
+        values.append(mid['mid'])
+    return values
+
+
+def takeDateForRate(code, value):
+    values = []
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=60)
+    url = f"{prefix}/exchangerates/rates/{checkWhereIsCurrencyAvailable(code)}/{code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
+    response = requests.get(url)
+    data = response.json()
+    for mid in data['rates']:
+        values.append(mid['mid'])
+
+    if value == 'max':
+        value = max(values)
+    else:
+        value = min(values)
+
+    for rate in data['rates']:
+        if value == rate['mid']:
+            return rate['effectiveDate']
+
+
+def showAverageRate(user_input):
+    for code in user_input.upper().split():
+        print('----------------------' + code + '------------------------')
+        print(f'The average rate value for {code} is equal to {round(mean(takeRatesValues(code)), 4)}')
+        print(f'The median for {code} is equal to {round(median(takeRatesValues(code)), 4)}')
+        print(f'Max value for {code} occuried {takeDateForRate(code, 'max')} and is equal to {round(max(takeRatesValues(code)), 4)}')
+        print(f'Min value for {code} occuried {takeDateForRate(code, 'min')} is equal to {round(min(takeRatesValues(code)), 4)}\n')
+
+
 if __name__ == "__main__":
     choices = ['0', '1', '2', '3', '4', '5', '9']
 
@@ -138,7 +202,8 @@ if __name__ == "__main__":
           '2. Select the currencies you want to see\n' +
           '3. Save all the data from point 1. and 2. into a CSV file \n' +
           '4. Select the currencies you want to see and save them into a CSV file\n' +
-          '9. Exit\n')
+          '5. Show the average rate value, median, minimum, and maximum for the selected currency pair\n' +
+          '9. Exit')
 
     while (True):
         user_input = input("Your choice: ")
@@ -163,7 +228,8 @@ if __name__ == "__main__":
                 onlyUserSelectedCurrency()
                 break
             case "5":
-                print(getAllCurrency())
+                user_input = takeTheInput()
+                showAverageRate(user_input)
                 break
             case "9":
                 exit()
