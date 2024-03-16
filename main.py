@@ -4,13 +4,13 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
-prefix = "https://api.nbp.pl/api"
+PREFIX = "https://api.nbp.pl/api"
 FIRSTELEMENT = 0
 TABLES = ['a', 'b', 'c']
 
 
 def getUrl(table="A"):
-    return f"{prefix}/exchangerates/tables/{table.upper()}/"
+    return f"{PREFIX}/exchangerates/tables/{table.upper()}/"
 
 
 def getAllCurrency():
@@ -34,7 +34,7 @@ def checkTheCurrency(input):
 def fetch_exchange_rates(currency_code, days):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
-    url = f"{prefix}/exchangerates/rates/A/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
+    url = f"{PREFIX}/exchangerates/rates/A/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
     response = requests.get(url)
     data = response.json()
     rates = {rate['effectiveDate']: rate['mid'] for rate in data['rates']}
@@ -61,8 +61,8 @@ def userPairsCurrency(currency_pairs, days):
     start_date = end_date - timedelta(days=days)
     exchange_rates = {}
 
-    for pair in currency_pairs:
-        url = f"{prefix}/exchangerates/rates/A/{pair}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
+    for pair in currency_pairs.split():
+        url = f"{PREFIX}/exchangerates/rates/{checkWhereIsCurrencyAvailable(pair)}/{pair}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
         response = requests.get(url)
         data = response.json()
 
@@ -72,7 +72,7 @@ def userPairsCurrency(currency_pairs, days):
     return exchange_rates
 
 
-# Function to save all previously mentioned data into a CSV file
+# Function to save all previously mentioned data into a CSV file2
 def save_all_currency_data(df, filename="all_currency_data.csv"):
     df.to_csv(filename, index=False)
 
@@ -87,7 +87,7 @@ def saveAllColumns(data1, data2):
     noUsedColumns = []
 
     for data in data2.columns:
-        if (data not in data1.columns):
+        if data not in data1.columns:
             noUsedColumns.append(data)
 
     if noUsedColumns is not None:
@@ -101,7 +101,7 @@ def saveAllColumns(data1, data2):
 
 
 def takeTheInput():
-    while (True):
+    while True:
         user_input = input("Enter the currency separated by space (e.g. EUR USD CHF): ")
         length = len(user_input.split())
         counter = 0
@@ -122,12 +122,12 @@ def dataSelection():
     # Allow the user to input the name of the currency pairs they wish to access information for
     currency_pairs = takeTheInput()
     # Fetch the exchange rates for the last 60 days
-    exchange_rates_data = userPairsCurrency(currency_pairs, 60)
+    exchange_rates_data = userPairsCurrency(currency_pairs.upper(), 60)
 
     # Convert the data to a pandas DataFrame
     df = pd.DataFrame.from_dict(exchange_rates_data)
 
-    return (df, currency_pairs)
+    return df, currency_pairs
 
 
 def onlyUserSelectedCurrency():
@@ -139,7 +139,7 @@ def onlyUserSelectedCurrency():
 def checkWhereIsCurrencyAvailable(rate):
     for table in TABLES:
         codes = []
-        url = f"{prefix}/exchangerates/tables/{table.upper()}/"
+        url = f"{PREFIX}/exchangerates/tables/{table.upper()}/"
         response = requests.get(url)
         data = response.json()
         counter = 0
@@ -157,7 +157,7 @@ def takeRatesValues(code):
     values = []
     end_date = datetime.now()
     start_date = end_date - timedelta(days=60)
-    url = f"{prefix}/exchangerates/rates/{checkWhereIsCurrencyAvailable(code)}/{code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
+    url = f"{PREFIX}/exchangerates/rates/{checkWhereIsCurrencyAvailable(code)}/{code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
     response = requests.get(url)
     data = response.json()
     for mid in data['rates']:
@@ -169,7 +169,7 @@ def takeDateForRate(code, value):
     values = []
     end_date = datetime.now()
     start_date = end_date - timedelta(days=60)
-    url = f"{prefix}/exchangerates/rates/{checkWhereIsCurrencyAvailable(code)}/{code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
+    url = f"{PREFIX}/exchangerates/rates/{checkWhereIsCurrencyAvailable(code)}/{code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
     response = requests.get(url)
     data = response.json()
     for mid in data['rates']:
@@ -185,13 +185,13 @@ def takeDateForRate(code, value):
             return rate['effectiveDate']
 
 
-def showAverageRate(user_input):
-    for code in user_input.upper().split():
+def showAverageRate(input):
+    for code in input.upper().split():
         print('----------------------' + code + '------------------------')
         print(f'The average rate value for {code} is equal to {round(mean(takeRatesValues(code)), 4)}')
         print(f'The median for {code} is equal to {round(median(takeRatesValues(code)), 4)}')
-        print(f'Max value for {code} occuried {takeDateForRate(code, 'max')} and is equal to {round(max(takeRatesValues(code)), 4)}')
-        print(f'Min value for {code} occuried {takeDateForRate(code, 'min')} is equal to {round(min(takeRatesValues(code)), 4)}\n')
+        print(f'Max value for {code} occuried {takeDateForRate(code, "max")} and is equal to {round(max(takeRatesValues(code)), 4)}')
+        print(f'Min value for {code} occuried {takeDateForRate(code, "min")} and is equal to {round(min(takeRatesValues(code)), 4)}')
 
 
 if __name__ == "__main__":
@@ -228,8 +228,7 @@ if __name__ == "__main__":
                 onlyUserSelectedCurrency()
                 break
             case "5":
-                user_input = takeTheInput()
-                showAverageRate(user_input)
+                showAverageRate(takeTheInput())
                 break
             case "9":
                 exit()
