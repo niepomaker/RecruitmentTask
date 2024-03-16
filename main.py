@@ -1,11 +1,14 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+
 prefix = "https://api.nbp.pl/api"
 FIRSTELEMENT = 0
 
-def getUrl(table = "A"):
+
+def getUrl(table="A"):
     return f"{prefix}/exchangerates/tables/{table.upper()}/"
+
 
 def getAllCurrency():
     data = ['a', 'b', 'c']
@@ -21,8 +24,10 @@ def getAllCurrency():
             counter = counter + 1
     return table
 
+
 def checkTheCurrency(input):
     return getAllCurrency().__contains__(input.upper())
+
 
 def fetch_exchange_rates(currency_code, days):
     end_date = datetime.now()
@@ -32,6 +37,7 @@ def fetch_exchange_rates(currency_code, days):
     data = response.json()
     rates = {rate['effectiveDate']: rate['mid'] for rate in data['rates']}
     return rates
+
 
 def fetchingCurrencyData():
     days = 60
@@ -46,6 +52,7 @@ def fetchingCurrencyData():
     df['CHF/USD'] = df['CHF/PLN'] / df['USD/PLN']
 
     return df
+
 
 def userPairsCurrency(currency_pairs, days):
     end_date = datetime.now()
@@ -62,17 +69,17 @@ def userPairsCurrency(currency_pairs, days):
 
     return exchange_rates
 
+
 # Function to save all previously mentioned data into a CSV file
 def save_all_currency_data(df, filename="all_currency_data.csv"):
     df.to_csv(filename, index=False)
 
 
-# Function to save only user-selected currency pairs into a CSV file
 def save_selected_currency_data(df, selected_pairs, filename="selected_currency_data.csv"):
-    # Filter the DataFrame to include only the selected currency pairs
     filtered_df = df[["Date"] + selected_pairs]
     filtered_df.to_csv(filename, index=False)
     return filtered_df
+
 
 def saveAllColumns(data1, data2):
     noUsedColumns = []
@@ -87,17 +94,25 @@ def saveAllColumns(data1, data2):
 
     data1.to_csv('all_currency_data.csv')
 
-    # Używając list comprehension do konwersji wszystkich elementów na stringi
-    print("Data for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD, " + ", ".join([zmienna for zmienna in noUsedColumns]) + " has bean saved!")
+    print("Data for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD, " + ", ".join(
+        [zmienna for zmienna in noUsedColumns]) + " has bean saved!")
+
 
 def dataSelection():
     # Allow the user to input the name of the currency pairs they wish to access information for
-    while(True):
+    while (True):
         user_input = input("Enter the currency separated by space (e.g. EUR USD CHF): ")
-        if checkTheCurrency(user_input):
+        length = len(user_input.split())
+        counter = 0
+        for el in user_input.upper().split():
+            if checkTheCurrency(el):
+                counter = counter + 1
+            else:
+                print("Wrong input, try again")
+                continue
+        if length == counter:
             break
         else:
-            print("Wrong input, try again")
             continue
     currency_pairs = user_input.upper().split()
     # Fetch the exchange rates for the last 60 days
@@ -110,18 +125,19 @@ def dataSelection():
 
 
 def onlyUserSelectedCurrency():
-    data , currency = dataSelection()
+    data, currency = dataSelection()
     data.to_csv('selected_currency_data.csv')
     print("Data for  " + "/PLN, ".join([zmienna for zmienna in currency]) + "/PLN has bean saved!")
 
+
 if __name__ == "__main__":
-    choices = ['0','1','2','3','4','5','9']
+    choices = ['0', '1', '2', '3', '4', '5', '9']
 
     print('Choose what you want to do:\n' +
           '1. Retrieve exchange rates for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD for the last 60 days\n' +
           '2. Select the currencies you want to see\n' +
           '3. Save all the data from point 1. and 2. into a CSV file \n' +
-          '4. Select the currencies you want to see and save them into a CSV file\n'+
+          '4. Select the currencies you want to see and save them into a CSV file\n' +
           '9. Exit\n')
 
     while (True):
@@ -149,3 +165,5 @@ if __name__ == "__main__":
             case "5":
                 print(getAllCurrency())
                 break
+            case "9":
+                exit()
