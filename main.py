@@ -4,10 +4,30 @@ from datetime import datetime, timedelta
 prefix = "https://api.nbp.pl/api"
 FIRSTELEMENT = 0
 
+def getUrl(table = "A"):
+    return f"{prefix}/exchangerates/tables/{table.upper()}/"
+
+def getAllCurrency():
+    data = ['a', 'b', 'c']
+    table = []
+    for el in data:
+        response = requests.get(getUrl(el))
+        json = response.json()
+        counter = 0
+        for _ in json[0]['rates']:
+            code = json[0]['rates'][counter]['code']
+            if code not in table:
+                table.append(code)
+            counter = counter + 1
+    return table
+
+def checkTheCurrency(input):
+    return getAllCurrency().__contains__(input.upper())
+
 def fetch_exchange_rates(currency_code, days):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
-    url = f"{prefix}/exchangerates/rates/A/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
+    url = f"{prefix}/exchangerates/rates/B/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
     response = requests.get(url)
     data = response.json()
     rates = {rate['effectiveDate']: rate['mid'] for rate in data['rates']}
@@ -35,7 +55,6 @@ def userPairsCurrency(currency_pairs, days):
     for pair in currency_pairs:
         url = f"{prefix}/exchangerates/rates/A/{pair}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/?format=json"
         response = requests.get(url)
-        response.raise_for_status()
         data = response.json()
 
         rates = {entry['effectiveDate']: entry['mid'] for entry in data['rates']}
@@ -71,11 +90,15 @@ def saveAllColumns(data1, data2):
     # Używając list comprehension do konwersji wszystkich elementów na stringi
     print("Data for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD, " + ", ".join([zmienna for zmienna in noUsedColumns]) + " has bean saved!")
 
-
-
 def dataSelection():
     # Allow the user to input the name of the currency pairs they wish to access information for
-    user_input = input("Enter the currency separated by space (e.g. EUR USD CHF): ")
+    while(True):
+        user_input = input("Enter the currency separated by space (e.g. EUR USD CHF): ")
+        if checkTheCurrency(user_input):
+            break
+        else:
+            print("Wrong input, try again")
+            continue
     currency_pairs = user_input.upper().split()
     # Fetch the exchange rates for the last 60 days
     exchange_rates_data = userPairsCurrency(currency_pairs, 60)
@@ -89,9 +112,10 @@ def dataSelection():
 def onlyUserSelectedCurrency():
     data , currency = dataSelection()
     data.to_csv('selected_currency_data.csv')
-    print("Data for  " + ", ".join([zmienna for zmienna in currency]) + " has bean saved!")
+    print("Data for  " + "/PLN, ".join([zmienna for zmienna in currency]) + "/PLN has bean saved!")
 
 if __name__ == "__main__":
+    choices = ['0','1','2','3','4','5','9']
 
     print('Choose what you want to do:\n' +
           '1. Retrieve exchange rates for EUR/PLN, USD/PLN, CHF/PLN, EUR/USD, CHF/USD for the last 60 days\n' +
@@ -100,7 +124,14 @@ if __name__ == "__main__":
           '4. Select the currencies you want to see and save them into a CSV file\n'+
           '9. Exit\n')
 
-    user_input = input("Your choice: ")
+    while (True):
+        user_input = input("Your choice: ")
+        if user_input in choices:
+            break
+        else:
+            print("Wrong input, try again")
+            continue
+
     while (user_input != 9):
         match user_input:
             case "1":
@@ -114,4 +145,7 @@ if __name__ == "__main__":
                 break
             case "4":
                 onlyUserSelectedCurrency()
+                break
+            case "5":
+                print(getAllCurrency())
                 break
