@@ -74,7 +74,6 @@ def user_pairs_currency(currency_pairs, days):
     return exchange_rates
 
 
-# Function to save all previously mentioned data into a CSV file2
 def save_all_currency_data(df, filename="all_currency_data.csv"):
     df.to_csv(filename, index=False)
 
@@ -111,7 +110,7 @@ def take_the_input():
             if check_the_currency(el):
                 counter = counter + 1
             else:
-                print("Wrong input, try again")
+                print("Wrong currency, try again")
                 continue
         if length == counter:
             break
@@ -121,12 +120,9 @@ def take_the_input():
 
 
 def data_selection():
-    # Allow the user to input the name of the currency pairs they wish to access information for
     currency_pairs = take_the_input()
-    # Fetch the exchange rates for the last 60 days
     exchange_rates_data = user_pairs_currency(currency_pairs.upper(), 60)
 
-    # Convert the data to a pandas DataFrame
     df = pd.DataFrame.from_dict(exchange_rates_data)
 
     return df, currency_pairs
@@ -191,18 +187,10 @@ def show_average_rate(input):
     for code in input.upper().split():
         print('----------------------' + code + '------------------------')
         print(f'The average rate value for {code} is equal to {round(mean(take_rates_values(code)), 4)}')
-        print(f'The median for {code} is equal to {round(median(take_date_for_rate(code)), 4)}')
-        print(
-            f'Max value for {code} currency occuried {take_date_for_rate(code, "max")} and is equal to {round(max(take_rates_values(code)), 4)}')
-        print(
-            f'Min value for {code} currency occuried {take_date_for_rate(code, "min")} and is equal to {round(min(take_rates_values(code)), 4)}')
+        print(f'The median for {code} is equal to {round(median(take_rates_values(code)), 4)}')
+        print(f'Max value for {code} currency occuried {take_date_for_rate(code, "max")} and is equal to {round(max(take_rates_values(code)), 4)}')
+        print(f'Min value for {code} currency occuried {take_date_for_rate(code, "min")} and is equal to {round(min(take_rates_values(code)), 4)}\n')
 
-
-def fetch_and_save_data():
-    fetching_currency_data().to_csv("all_currency_data.csv")
-
-
-schedule.every().day.at("19:18").do(fetch_and_save_data)
 
 if __name__ == "__main__":
     choices = ['0', '1', '2', '3', '4', '5', '9']
