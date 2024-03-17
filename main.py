@@ -4,8 +4,6 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
-import schedule
-
 PREFIX = "https://api.nbp.pl/api"
 FIRSTELEMENT = 0
 TABLES = ['a', 'b', 'c']
@@ -33,23 +31,9 @@ def check_the_currency(input):
     return get_all_currency().__contains__(input.upper())
 
 
-def fetch_exchange_rates(currency_code, days):
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days)
-    url = f"{PREFIX}/exchangerates/rates/A/{currency_code}/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}/"
-    response = requests.get(url)
-    data = response.json()
-    rates = {rate['effectiveDate']: rate['mid'] for rate in data['rates']}
-    return rates
-
-
 def fetching_currency_data():
     days = 60
-    eur_pln_rates = fetch_exchange_rates('EUR', days)
-    usd_pln_rates = fetch_exchange_rates('USD', days)
-    chf_pln_rates = fetch_exchange_rates('CHF', days)
-
-    df = pd.DataFrame([eur_pln_rates, usd_pln_rates, chf_pln_rates]).T
+    df = pd.DataFrame(user_pairs_currency('EUR USD CHF', days))
     df.columns = ['EUR/PLN', 'USD/PLN', 'CHF/PLN']
 
     df['EUR/USD'] = round(df['EUR/PLN'] / df['USD/PLN'], 4)
