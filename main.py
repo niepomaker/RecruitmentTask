@@ -133,7 +133,7 @@ def dataSelection():
 def onlyUserSelectedCurrency():
     data, currency = dataSelection()
     data.to_csv('selected_currency_data.csv')
-    print("Data for  " + "/PLN, ".join([zmienna for zmienna in currency]) + "/PLN has bean saved!")
+    print("Data for  " + "/PLN, ".join([zmienna.upper() for zmienna in currency.split()]) + "/PLN has bean saved!")
 
 
 def checkWhereIsCurrencyAvailable(rate):
@@ -190,8 +190,8 @@ def showAverageRate(input):
         print('----------------------' + code + '------------------------')
         print(f'The average rate value for {code} is equal to {round(mean(takeRatesValues(code)), 4)}')
         print(f'The median for {code} is equal to {round(median(takeRatesValues(code)), 4)}')
-        print(f'Max value for {code} occuried {takeDateForRate(code, "max")} and is equal to {round(max(takeRatesValues(code)), 4)}')
-        print(f'Min value for {code} occuried {takeDateForRate(code, "min")} and is equal to {round(min(takeRatesValues(code)), 4)}')
+        print(f'Max value for {code} currency occuried {takeDateForRate(code, "max")} and is equal to {round(max(takeRatesValues(code)), 4)}')
+        print(f'Min value for {code} currency occuried {takeDateForRate(code, "min")} and is equal to {round(min(takeRatesValues(code)), 4)}')
 
 
 if __name__ == "__main__":
